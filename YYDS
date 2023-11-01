@@ -1,0 +1,45 @@
+<?php
+    // 要访问的目标页面
+    $url = "http://httpbin.org/ip";
+    $urls = "https://httpbin.org/ip";
+ 
+    // 代理服务器(产品官网 www.16yun.cn)
+    define("PROXY_SERVER", "tcp://t.16yun.cn:31111");
+ 
+    // 代理身份信息
+    define("PROXY_USER", "username");
+    define("PROXY_PASS", "password");
+ 
+    $proxyAuth = base64_encode(PROXY_USER . ":" . PROXY_PASS);
+ 
+    // 设置 Proxy tunnel
+    $tunnel = rand(1,10000);
+ 
+    $headers = implode("\r\n", [
+        "Proxy-Authorization: Basic {$proxyAuth}",
+        "Proxy-Tunnel: ${tunnel}",
+    ]);
+    $sniServer = parse_url($urls, PHP_URL_HOST);
+    $options = [
+        "http" => [
+            "proxy"  => PROXY_SERVER,
+            "header" => $headers,
+            "method" => "GET",
+            'request_fulluri' => true,
+        ],
+        'ssl' => array(
+                'SNI_enabled' => true, // Disable SNI for https over http proxies
+                'SNI_server_name' => $sniServer
+        )
+    ];
+    print($url);
+    $context = stream_context_create($options);
+    $result = file_get_contents($url, false, $context);
+    var_dump($result);
+ 
+    // 访问 HTTPS 页面
+    print($urls);
+    $context = stream_context_create($options);
+    $result = file_get_contents($urls, false, $context);
+    var_dump($result);
+?>
